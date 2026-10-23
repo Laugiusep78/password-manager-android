@@ -14,7 +14,20 @@ from kivy.uix.screenmanager import Screen, ScreenManager
 from kivy.uix.scrollview import ScrollView
 from kivy.uix.textinput import TextInput
 
-DB_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "passwords.json")
+
+def get_db_path():
+    try:
+        app = App.get_running_app()
+        if app is not None:
+            base_dir = app.user_data_dir
+            os.makedirs(base_dir, exist_ok=True)
+            return os.path.join(base_dir, "passwords.json")
+    except Exception:
+        pass
+
+    base_dir = os.path.join(os.path.expanduser("~"), ".password_manager_android")
+    os.makedirs(base_dir, exist_ok=True)
+    return os.path.join(base_dir, "passwords.json")
 
 
 def hash_codice(codice):
@@ -22,17 +35,19 @@ def hash_codice(codice):
 
 
 def carica_database():
-    if not os.path.exists(DB_FILE):
+    db_path = get_db_path()
+    if not os.path.exists(db_path):
         return {"master_hash": None, "dati": []}
     try:
-        with open(DB_FILE, "r", encoding="utf-8") as f:
+        with open(db_path, "r", encoding="utf-8") as f:
             return json.load(f)
     except json.JSONDecodeError:
         return {"master_hash": None, "dati": []}
 
 
 def salva_database(contenuto):
-    with open(DB_FILE, "w", encoding="utf-8") as f:
+    db_path = get_db_path()
+    with open(db_path, "w", encoding="utf-8") as f:
         json.dump(contenuto, f, indent=4)
 
 
